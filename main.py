@@ -45,10 +45,19 @@ def callback():
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
+    if(event.message.text == "割り勘"):
+        send_url(event)
+    
     line_bot_api.reply_message(
         event.reply_token,
         TextSendMessage(text=event.message.text))
 
+def send_url(event):
+    line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text="https://www.google.com")
+        )
+    
 
 if __name__ == "__main__":
 #    app.run()
