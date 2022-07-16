@@ -57,6 +57,11 @@ def send_url(event):
             event.reply_token,
             TextSendMessage(text="https://www.google.com")
         )
+
+@app.route("/payment",methods=['POST'])
+def post_payment():
+    print(request.json)
+    return "succes",200
     
 
 if __name__ == "__main__":
