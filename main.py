@@ -1,6 +1,6 @@
 
 from flask import Flask, request, abort
-
+from dotenv import load_dotenv
 from linebot import (
     LineBotApi, WebhookHandler
 )
@@ -11,6 +11,8 @@ from linebot.models import (
     MessageEvent, TextMessage, TextSendMessage,
 )
 import os
+
+load_dotenv()
 
 app = Flask(__name__)
 
@@ -47,7 +49,8 @@ def callback():
 def handle_message(event):
     if(event.message.text == "割り勘"):
         send_url(event)
-    
+    if event.message.text == "test":
+        print(event)
     line_bot_api.reply_message(
         event.reply_token,
         TextSendMessage(text=event.message.text))
@@ -61,8 +64,12 @@ def send_url(event):
 @app.route("/payment",methods=['POST'])
 def post_payment():
     print(request.json)
-    return "succes",200
-    
+    return "success",200
+
+@app.route("/init_data/<group_id>",methods=['GET'])
+def fetch_user_data(group_id):
+    member_ids_res = line_bot_api.get_group_member_ids(group_id)
+    print(member_ids_res)    
 
 if __name__ == "__main__":
 #    app.run()
