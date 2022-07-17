@@ -1,7 +1,6 @@
 from email import message
 from flask import Flask, request, abort
 from dotenv import load_dotenv
-from jmespath import search
 from linebot import (
     LineBotApi, WebhookHandler
 )
