@@ -62,6 +62,7 @@ def callback():
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
+    print(event.message.text)
     if(event.message.text[:3] == "割り勘"):
         total_price = re.search(r'\d+',event.message.text)
         if(total_price is not None):
