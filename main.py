@@ -1,8 +1,7 @@
-
-from crypt import methods
-from msilib import init_database
+from email import message
 from flask import Flask, request, abort
 from dotenv import load_dotenv
+from jmespath import search
 from linebot import (
     LineBotApi, WebhookHandler
 )
@@ -20,6 +19,8 @@ from firebase_admin import credentials
 from firebase_admin import firestore
 
 import secrets
+
+import re
 
 load_dotenv()
 cred = credentials.Certificate("firebase/cred.json")
@@ -62,23 +63,33 @@ def callback():
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    if(event.message.text == "割り勘"):
-        init_data(event)
+    if(event.message.text[:3] == "割り勘"):
+        total_price = re.search(r'\d+',event.message.text)
+        if(total_price is not None):
+            init_data(event,total_price.group())
+        else:
+            line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text="入力方式が間違っています！\n割り勘<金額>円の形で再送信してください！")
+        )
+
+            
     if event.message.text == "test":
         print(event)
     """line_bot_api.reply_message(
         event.reply_token,
         TextSendMessage(text=event.message.text))"""
 
-def init_data(event):
+def init_data(event,total_price):
     doc_ref = firestore.collection("payments").document()
     doc_ref.set({
-        "foo": secrets.token_hex(32)
+        "group_id":event.source.groupId,
+        "total_price":total_price
     })
     line_bot_api.reply_message(
-            event.reply_token,
-            TextSendMessage(text="https://liff.line.me/1657307954-mJEJ8lW4")
-        )
+        event.reply_token,
+        TextSendMessage(text="https://liff.line.me/1657307954-mJEJ8lW4/?sessionId="+doc_ref.id)
+    )
 
 @app.route("/payment",methods=['POST'])
 def post_payment():
