@@ -115,7 +115,7 @@ def post_payment():
             elif(users_ref["users"][userId]["payment_offer_price"] != users_ref["users"][request.json["userId"]]["payment_offer_price"]):
                 users_ref["users"][request.json["userId"]]["min_offer"] = False
     doc_ref.update({"users":users_ref["users"]})   #firestoreのusersを上書きする
-    members_count = line_bot_api.get_group_members_count(request.json["groupId"])
+    members_count = line_bot_api.get_group_members_count(users_ref["group_id"])
     users_ref = doc_ref.get().to_dict()
     if(members_count == len(users_ref["users"])):
         #print(members_count)
@@ -163,7 +163,7 @@ def post_payment():
         else:
             #print(total_offer_price)
             doc_ref.update({"users":{}}) 
-            resend_message = "全員の合計が支払い金額に届かなかったよ！再度入力し直してね！\nヒント：少し大きめの額にして太っ腹なところを見せつけよう！\n\nhttps://liff.line.me/1657307954-mJEJ8lW4/?sessionId="+doc_ref.id
+            resend_message = "全員の合計が支払い金額に届かなかったよ！再度入力し直してね！\nヒント：少し大きめの額にして太っ腹なところを見せつけよう！\n\nhttps://liff.line.me/1657307954-mJEJ8lW4/?sessionId="+doc_ref.id+"&totalPrice="+str(users_ref["total_price"])
             line_bot_api.push_message(users_ref["group_id"], TextSendMessage(text=resend_message))
     return "success",200
 
