@@ -22,7 +22,7 @@ import secrets
 import re
 
 load_dotenv()
-cred = credentials.Certificate("firebase/cred.json")
+cred = credentials.Certificate(json.loads(os.getenv("FIREBASE_CRED")))
 firebase_admin.initialize_app(cred)
 
 firestore = firestore.client()
