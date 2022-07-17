@@ -180,29 +180,6 @@ def fetch_result_data():
     doc_ref = firestore.collection("payments").document(docId)
     return doc_ref.get().to_dict(),200
 
-@app.route("/init_data/<group_id>",methods=['GET'])
-def fetch_user_data(group_id):
-    print(group_id)
-    member_ids_res = line_bot_api.get_group_member_profile(group_id,"Ue3c84d1413d2c71275f863f3c03a454a")
-    print(member_ids_res.display_name)
-    return "s",200 
-
-@app.route("/test",methods=["GET"])
-def create_doc():
-    doc_ref = firestore.collection("payments").document()
-    doc_ref.set({
-        "foo": secrets.token_hex(32)
-    })
-    print(doc_ref.id)
-    return "doc_ref.key",200
-
-@app.route("/test2",methods=["GET"])
-def read_doc():
-    payments_ref = firestore.collection("payments").document("2QY4a5P14XDkao7EQ0C6")
-    payments_ref.update({"users":{"userId2":{"userName":"userName",'paymentOfferPrice':5000}}})
-    #print(docs.to_dict())
-    return "su",200
-
 if __name__ == "__main__":
 #    app.run()
     port = int(os.getenv("PORT", 5000))
