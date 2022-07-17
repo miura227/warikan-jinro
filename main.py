@@ -63,6 +63,7 @@ def callback():
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     print(event.message.text)
+    print(event.source)
     if(event.message.text[:3] == "割り勘"):
         total_price = re.search(r'\d+',event.message.text)
         if(total_price is not None):
@@ -83,7 +84,7 @@ def handle_message(event):
 def init_data(event,total_price):
     doc_ref = firestore.collection("payments").document()
     doc_ref.set({
-        "group_id":event.source.groupId,
+        "group_id":event.source.group_id,
         "total_price":total_price
     })
     line_bot_api.reply_message(
