@@ -1,4 +1,6 @@
 
+from crypt import methods
+from msilib import init_database
 from flask import Flask, request, abort
 from dotenv import load_dotenv
 from linebot import (
@@ -11,8 +13,21 @@ from linebot.models import (
     MessageEvent, TextMessage, TextSendMessage,
 )
 import os
+import json
+
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import firestore
+
+import secrets
 
 load_dotenv()
+cred = credentials.Certificate("firebase/cred.json")
+firebase_admin.initialize_app(cred)
+
+firestore = firestore.client()
+
+
 
 app = Flask(__name__)
 
@@ -48,17 +63,21 @@ def callback():
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     if(event.message.text == "割り勘"):
-        send_url(event)
+        init_data(event)
     if event.message.text == "test":
         print(event)
-    line_bot_api.reply_message(
+    """line_bot_api.reply_message(
         event.reply_token,
-        TextSendMessage(text=event.message.text))
+        TextSendMessage(text=event.message.text))"""
 
-def send_url(event):
+def init_data(event):
+    doc_ref = firestore.collection("payments").document()
+    doc_ref.set({
+        "foo": secrets.token_hex(32)
+    })
     line_bot_api.reply_message(
             event.reply_token,
-            TextSendMessage(text="https://www.google.com")
+            TextSendMessage(text="https://liff.line.me/1657307954-mJEJ8lW4")
         )
 
 @app.route("/payment",methods=['POST'])
@@ -68,10 +87,29 @@ def post_payment():
 
 @app.route("/init_data/<group_id>",methods=['GET'])
 def fetch_user_data(group_id):
-    member_ids_res = line_bot_api.get_group_member_ids(group_id)
-    print(member_ids_res)    
+    print(group_id)
+    member_ids_res = line_bot_api.get_group_member_profile(group_id,"Ue3c84d1413d2c71275f863f3c03a454a")
+    print(member_ids_res.display_name)
+    return "s",200 
+
+@app.route("/test",methods=["GET"])
+def create_doc():
+    doc_ref = firestore.collection("payments").document()
+    doc_ref.set({
+        "foo": secrets.token_hex(32)
+    })
+    print(doc_ref.id)
+    return "doc_ref.key",200
+
+@app.route("/test2",methods=["GET"])
+def read_doc():
+    payments_ref = firestore.collection("payments").add()
+    doc = payments_ref.get()
+    print(doc.to_dict())
+    #print(docs.to_dict())
+    return "su",200
 
 if __name__ == "__main__":
 #    app.run()
     port = int(os.getenv("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=port,debug=True)
