@@ -99,7 +99,7 @@ def init_data(event,total_price):
     })
     line_bot_api.reply_message(
         event.reply_token,
-        TextSendMessage(text="https://liff.line.me/1657307954-mJEJ8lW4?sessionId="+doc_ref.id+"&totalPrice="+total_price)
+        TextSendMessage(text="https://liff.line.me/1657307954-mJEJ8lW4?sessionId="+doc_ref.id+"&totalPrice="+str(total_price))
     )
 
 @app.route("/payment",methods=['POST'])
