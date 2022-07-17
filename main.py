@@ -85,7 +85,8 @@ def init_data(event,total_price):
     doc_ref = firestore.collection("payments").document()
     doc_ref.set({
         "group_id":event.source.group_id,
-        "total_price":total_price
+        "total_price":total_price,
+        "users":{}
     })
     line_bot_api.reply_message(
         event.reply_token,
@@ -95,6 +96,10 @@ def init_data(event,total_price):
 @app.route("/payment",methods=['POST'])
 def post_payment():
     print(request.json)
+    doc_ref = firestore.collection('payments').document(request.json["sessionId"])  #扱うドキュメントを指定する
+    users_ref = doc_ref.get().to_dict() #ここで取得する
+    users_ref["users"][request.json["userId"]] = request.json["userData"]  #ここでkeyに存在しないuserIdを指定した場合に新しくuserIdをkeyに持つ連想配列を追加する。既にuserIdが存在した場合上書きする
+    doc_ref.update({"users":users_ref["users"]})   #firestoreのusersを上書きする
     return "success",200
 
 @app.route("/init_data/<group_id>",methods=['GET'])
@@ -115,9 +120,8 @@ def create_doc():
 
 @app.route("/test2",methods=["GET"])
 def read_doc():
-    payments_ref = firestore.collection("payments").add()
-    doc = payments_ref.get()
-    print(doc.to_dict())
+    payments_ref = firestore.collection("payments").document("2QY4a5P14XDkao7EQ0C6")
+    payments_ref.update({"users":{"userId2":{"userName":"userName","paymentOfferPrice":5000}}})
     #print(docs.to_dict())
     return "su",200
 
