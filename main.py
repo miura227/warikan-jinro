@@ -67,14 +67,21 @@ def handle_message(event):
     print(event.message.text)
     print(event.source)
     if(event.message.text[:3] == "割り勘"):
-        total_price = re.search(r'\d+',event.message.text)
-        if(total_price is not None):
-            init_data(event,total_price.group())
+        total_prices = re.search(r'\d+',event.message.text)
+        if(total_prices is not None):
+            total_price = int(total_prices.group())
+            if(0 < total_price and total_price < 1000000):
+                init_data(event,total_price)
+            else:
+                line_bot_api.reply_message(
+                    event.reply_token,
+                    TextSendMessage(text="金額は1000000円未満で設定してね！")
+                )
         else:
             line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(text="入力方式が間違っているよ！\n割り勘<金額>円の形でもう一度送信してね！")
-        )
+            )
 
             
     if event.message.text == "test":
@@ -87,12 +94,12 @@ def init_data(event,total_price):
     doc_ref = firestore.collection("payments").document()
     doc_ref.set({
         "group_id":event.source.group_id,
-        "total_price":int(total_price),
+        "total_price":total_price,
         "users":{}
     })
     line_bot_api.reply_message(
         event.reply_token,
-        TextSendMessage(text="https://liff.line.me/1657307954-mJEJ8lW4/?sessionId="+doc_ref.id+"&totalPrice="+total_price)
+        TextSendMessage(text="https://liff.line.me/1657307954-mJEJ8lW4?sessionId="+doc_ref.id+"&totalPrice="+total_price)
     )
 
 @app.route("/payment",methods=['POST'])
@@ -159,15 +166,19 @@ def post_payment():
                 line_bot_api.push_message(users_ref["group_id"], TextSendMessage(text=black_message))
             #line_bot_api.push_message(users_ref["group_id"], TextSendMessage(users_ref["users"][userId]["min_offer"]))
                 #print(users_ref)
-            line_bot_api.push_message(users_ref["group_id"],TextSendMessage(text="https://liff.line.me/1657307954-mJEJ8lW4/result/?sessionId="+doc_ref.id))
+            line_bot_api.push_message(users_ref["group_id"],TextSendMessage(text="https://liff.line.me/1657307954-mJEJ8lW4/result?sessionId="+doc_ref.id))
         else:
             #print(total_offer_price)
             doc_ref.update({"users":{}}) 
-            resend_message = "全員の合計が支払い金額に届かなかったよ！再度入力し直してね！\nヒント：少し大きめの額にして太っ腹なところを見せつけよう！\n\nhttps://liff.line.me/1657307954-mJEJ8lW4/?sessionId="+doc_ref.id+"&totalPrice="+str(users_ref["total_price"])
+            resend_message = "全員の合計が支払い金額に届かなかったよ！再度入力し直してね！\nヒント：少し大きめの額にして太っ腹なところを見せつけよう！\n\nhttps://liff.line.me/1657307954-mJEJ8lW4?sessionId="+doc_ref.id+"&totalPrice="+str(users_ref["total_price"])
             line_bot_api.push_message(users_ref["group_id"], TextSendMessage(text=resend_message))
     return "success",200
 
-
+@app.route("/result",methods=["GET"])
+def fetch_result_data():
+    docId = request.args.get("sessionId")
+    doc_ref = firestore.collection("payments").document(docId)
+    return doc_ref.get().to_dict(),200
 
 @app.route("/init_data/<group_id>",methods=['GET'])
 def fetch_user_data(group_id):
